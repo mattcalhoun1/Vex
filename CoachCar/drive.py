@@ -35,39 +35,6 @@ print("\033[2J")
  
 import time
 
-# define variables used for controlling motors based on controller inputs
-controller_1_up_down_buttons_control_motors_stopped = True
-
-# define a task that will handle monitoring inputs from controller_1
-def rc_auto_loop_function_controller_1():
-    global controller_1_up_down_buttons_control_motors_stopped, remote_control_code_enabled
-    # process the controller input every 20 milliseconds
-    # update the motors based on the input values
-    while True:
-        if remote_control_code_enabled:
-            # check the buttonUp/buttonDown status
-            # to control motor_rear_l
-            if controller_1.buttonUp.pressing():
-                motor_rear_l.spin(FORWARD)
-                controller_1_up_down_buttons_control_motors_stopped = False
-            elif controller_1.buttonDown.pressing():
-                motor_rear_l.spin(REVERSE)
-                controller_1_up_down_buttons_control_motors_stopped = False
-            elif not controller_1_up_down_buttons_control_motors_stopped:
-                motor_rear_l.stop()
-
-                # set the toggle so that we don't constantly tell the motor to stop when
-                # the buttons are released
-                controller_1_up_down_buttons_control_motors_stopped = True
-
-        # wait before repeating the process
-        wait(20, MSEC)
-
- 
-# define variable for remote controller enable/disable
-remote_control_code_enabled = True
-rc_auto_loop_thread_controller_1 = Thread(rc_auto_loop_function_controller_1)
-
 # motors are:
 # motor_front_l, motor_front_r
 # motor_rear_l, motor_rear_r
@@ -136,17 +103,43 @@ def stop_moving ():
     for m in [motor_front_l, motor_rear_l, motor_front_r, motor_rear_r]:
         m.stop()
 
-def lower_chopper ():
+def chop ():
     # Turns pneumatic on for one second
     chopper.set(True)
     wait(1, SECONDS)
     chopper.set(False)
 
-def extend_jabber ():
-    # Turns pneumatic on for one second
+chopper_down = False
+pusher_out = False
+
+def lower_chopper ():
+    global chopper_down
+    chopper_down = True
+    chopper.set(True)
+
+def release_chopper ():
+    global chopper_down
+    chopper_down = False
+    chopper.set(False)
+
+def extend_pusher ():
+    global pusher_out
+    pusher_out = True
     poker.set(True)
-    wait(1, SECONDS)
+
+def retract_pusher ():
+    global pusher_out
+    pusher_out = False
     poker.set(False)
+
+def grab_tri_ball ():
+    lower_chopper()
+    wait(.1, SECONDS)
+    extend_pusher()
+
+def drop_tri_ball():
+    release_chopper()
+    retract_pusher()
 
 def get_velocity_for_position (axis_pos : int):
     if axis_pos == 0:
@@ -171,6 +164,15 @@ def get_desired_velocity ():
             return abs(this_ax_velocity)
 
     return 0
+
+def map_controller_actions ():
+    controller_1.buttonL1.pressed(lower_chopper)
+    controller_1.buttonL1.released(release_chopper)
+    controller_1.buttonR1.pressed(extend_pusher)
+    controller_1.buttonR1.released(retract_pusher)
+    controller_1.buttonX.pressed(grab_tri_ball)
+    controller_1.buttonY.pressed(drop_tri_ball)
+
 
 # returns the appropriate drive method, based on what
 # the driver is doing with the axis buttons on the controller
@@ -203,26 +205,21 @@ def get_drive_method ():
  
 
 def switching_to_autonomous ():
-
     return controller_1.buttonA.pressing()
 
- 
-
 def switching_to_controlled ():
-
     return controller_1.buttonB.pressing()
-
- 
 
 # causes the vehicle to enter controller-based driving
 
 def start_controlled():
-    while(False):
+    map_controller_actions()
+    while(True):
         drive_method = get_drive_method()
         if drive_method is not None:
             drive_method(get_desired_velocity())
-        elif switching_to_autonomous():
-            break
+        #elif switching_to_autonomous():
+        #    break
 
         else:
             stop_moving()
@@ -248,13 +245,11 @@ def start_autonomous():
 
         time.sleep(1.0)
 
-        lower_chopper()
-        extend_jabber()
+        grab_tri_ball()
+        drop_tri_ball()
 
     start_controlled()
 
 start_controlled()
-
- 
 
  
