@@ -10,10 +10,10 @@ chopper = DigitalOut(brain.three_wire_port.a)
 poker = DigitalOut(brain.three_wire_port.b)
 camera_base = Servo(brain.three_wire_port.c)
 controller_1 = Controller(PRIMARY)
-motor_rear_l = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
-motor_rear_r = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-motor_front_l = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
-motor_front_r = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
+motor_rear_l = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+motor_rear_r = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
+motor_front_l = Motor(Ports.PORT11, GearSetting.RATIO_18_1, False)
+motor_front_r = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
 
 
 # wait for rotation sensor to fully initialize
