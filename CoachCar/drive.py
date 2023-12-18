@@ -41,7 +41,6 @@ import time
 
 # nice diagram showing mecanum motion:
 # https://robotics.stackexchange.com/questions/21303/rotate-while-strafing-with-mecanum-wheels
-
  
 
 def move_timed (move_method, velocity: int, seconds: float):
